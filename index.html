@@ -135,13 +135,12 @@
         const userInput = document.getElementById('user-input');
         const loading = document.getElementById('loading');
         
-        // API Key de Ney
         const apiKey = "AIzaSyADZMhSls9jz5FiGcrosZnKsPyUfKZrN3Q"; 
 
         const systemPrompt = "Eres un historiador experto en Panamá. Responde siempre de forma breve (máximo 2 párrafos), usando un lenguaje pedagógico para estudiantes panameños. Solo habla de temas relacionados con la historia de Panamá. Si te preguntan algo ajeno, responde amablemente que tu conocimiento se limita a la historia patria de Panamá.";
 
         async function fetchAIResponse(text) {
-            // Cambio clave: se añadió "-latest" al modelo y se mantuvo v1beta que es la más flexible
+            // Se actualizó el modelo a gemini-1.5-flash-latest como sugería la consola
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash-latest:generateContent?key=${apiKey}`;
             
             const payload = {
@@ -160,8 +159,8 @@
             const data = await response.json();
 
             if (!response.ok) {
-                console.error("ERROR EN CONSOLA:", data);
-                throw new Error(data.error?.message || "Error");
+                console.error("Detalle del error:", data);
+                throw new Error(data.error?.message || "Error de respuesta");
             }
 
             return data;
@@ -181,7 +180,7 @@
                 const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "No tengo datos sobre eso.";
                 addMessage('assistant', aiResponse);
             } catch (e) {
-                addMessage('assistant', "Hubo un problema al consultar la historia. Detalle: " + e.message);
+                addMessage('assistant', "Hubo un problema técnico. Detalle: " + e.message);
             } finally {
                 loading.classList.add('hidden');
             }
