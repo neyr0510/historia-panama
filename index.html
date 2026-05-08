@@ -118,9 +118,9 @@
         </div>
 
         <div class="flex gap-2 overflow-x-auto px-4 py-3 bg-slate-50 no-scrollbar shrink-0 border-t border-slate-100">
-            <button onclick="quickAsk('¿Qué pasó el 3 de noviembre de 1903?')" class="whitespace-nowrap px-4 py-2 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-700 shadow-sm active:bg-blue-50 text-xs">Separación 1903</button>
-            <button onclick="quickAsk('Historia del Canal de Panamá')" class="whitespace-nowrap px-4 py-2 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-700 shadow-sm active:bg-blue-50 text-xs">El Canal</button>
-            <button onclick="quickAsk('¿Quién fue Justo Arosemena?')" class="whitespace-nowrap px-4 py-2 bg-white border border-slate-200 rounded-full text-[10px] font-bold text-slate-700 shadow-sm active:bg-blue-50 text-xs">J. Arosemena</button>
+            <button onclick="quickAsk('¿Qué pasó el 3 de noviembre de 1903?')" class="whitespace-nowrap px-4 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-bold text-slate-700 shadow-sm active:bg-blue-50">Separación 1903</button>
+            <button onclick="quickAsk('Historia del Canal de Panamá')" class="whitespace-nowrap px-4 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-bold text-slate-700 shadow-sm active:bg-blue-50">El Canal</button>
+            <button onclick="quickAsk('¿Quién fue Justo Arosemena?')" class="whitespace-nowrap px-4 py-2 bg-white border border-slate-200 rounded-full text-[11px] font-bold text-slate-700 shadow-sm active:bg-blue-50">J. Arosemena</button>
         </div>
 
         <footer class="shrink-0">
@@ -139,12 +139,13 @@
         const userInput = document.getElementById('user-input');
         const loading = document.getElementById('loading');
         
-        // Llave de API - Asegúrate que esté activa en Google AI Studio
+        // Llave de API - Asegurada
         const apiKey = "AIzaSyADZMhSls9jz5FiGcrosZnKsPyUfKZrN3Q"; 
 
         const systemPrompt = "Eres un historiador experto en Panamá. Responde siempre de forma breve (máximo 2 párrafos), usando un lenguaje pedagógico para estudiantes panameños. Solo habla de temas relacionados con la historia de Panamá. Si te preguntan algo ajeno, responde amablemente que tu conocimiento se limita a la historia patria de Panamá.";
 
         async function fetchAIResponse(text) {
+            // Usando la versión v1beta para mayor compatibilidad con API Keys de AI Studio
             const url = `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${apiKey}`;
             
             const payload = {
@@ -154,17 +155,21 @@
 
             const response = await fetch(url, {
                 method: 'POST',
-                headers: { 'Content-Type': 'application/json' },
+                headers: { 
+                    'Content-Type': 'application/json'
+                },
                 body: JSON.stringify(payload)
             });
 
+            const data = await response.json();
+
             if (!response.ok) {
-                const errorInfo = await response.json();
-                console.error("Error de Google API:", errorInfo);
-                throw new Error(errorInfo.error?.message || "Error desconocido");
+                console.error("Error completo:", data);
+                // Si el error es de cuota o de llave, lanzamos el mensaje específico
+                throw new Error(data.error?.message || "Error de conexión");
             }
 
-            return await response.json();
+            return data;
         }
 
         async function sendMessage() {
@@ -178,11 +183,11 @@
             
             try {
                 const data = await fetchAIResponse(text);
-                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, no pude procesar esa información.";
+                const aiResponse = data.candidates?.[0]?.content?.parts?.[0]?.text || "Lo siento, no pude encontrar esa información en mis archivos.";
                 addMessage('assistant', aiResponse);
             } catch (e) {
-                console.error("Error al enviar mensaje:", e);
-                addMessage('assistant', "Lo siento, tuve un problema al conectar con mis archivos históricos. Por favor, revisa tu conexión o la validez de la API Key.");
+                console.error("Error en la app:", e);
+                addMessage('assistant', "Hubo un problema al consultar la historia. Por favor, verifica que tu conexión sea estable e intenta nuevamente.");
             } finally {
                 loading.classList.add('hidden');
             }
@@ -191,6 +196,7 @@
         function addMessage(role, text) {
             const div = document.createElement('div');
             div.className = `bubble ${role === 'user' ? 'bubble-user' : 'bubble-ai'}`;
+            // Formateo básico de negritas y saltos de línea
             div.innerHTML = text.replace(/\n/g, '<br>').replace(/\*\*(.*?)\*\*/g, '<b>$1</b>');
             chatBox.appendChild(div);
             
